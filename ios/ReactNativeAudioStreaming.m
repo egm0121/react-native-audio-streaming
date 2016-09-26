@@ -8,7 +8,34 @@
 @import AVFoundation;
 @import MediaPlayer;
 
-@implementation ReactNativeAudioStreaming
+@implementation ReactNativeAudioStreaming {
+   
+   NSMutableDictionary* _playerPool;
+   NSMutableDictionary* _callbackPool;
+}
+
+-(NSMutableDictionary*) playerPool {
+   if (!_playerPool) {
+      _playerPool = [NSMutableDictionary new];
+   }
+   return _playerPool;
+}
+
+-(NSMutableDictionary*) callbackPool {
+   if (!_callbackPool) {
+      _callbackPool = [NSMutableDictionary new];
+   }
+   return _callbackPool;
+}
+-(STKAudioPlayer*) playerForKey:(nonnull NSNumber*)key {
+   return [[self playerPool] objectForKey:key];
+}
+-(NSNumber*) keyForPlayer:(nonnull STKAudioPlayer*)player {
+   return [[[self playerPool] allKeysForObject:player] firstObject];
+}
+-(RCTResponseSenderBlock) callbackForKey:(nonnull NSNumber*)key {
+   return [[self callbackPool] objectForKey:key];
+}
 
 @synthesize bridge = _bridge;
 
@@ -23,16 +50,16 @@ RCT_EXPORT_MODULE()
    self = [super init];
    if (self) {
       [self setSharedAudioSessionCategory];
-      self.audioPlayer = [[STKAudioPlayer alloc] initWithOptions:(STKAudioPlayerOptions){ .flushQueueOnSeek = YES }];
-      [self.audioPlayer setDelegate:self];
-      [self registerAudioInterruptionNotifications];
-      [self registerRemoteControlEvents];
-      [self setNowPlayingInfo:true];
+      //self.audioPlayer = [[STKAudioPlayer alloc] initWithOptions:(STKAudioPlayerOptions){ .flushQueueOnSeek = YES }];
+      //[self.audioPlayer setDelegate:self];
+      //[self registerAudioInterruptionNotifications];
+      //[self registerRemoteControlEvents];
+      //[self setNowPlayingInfo:true];
       self.lastUrlString = @"";
       
-      [NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(tick:) userInfo:nil repeats:YES];
+      //[NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(tick:) userInfo:nil repeats:YES];
       
-      NSLog(@"AudioPlayer initialized");
+      NSLog(@"ReactNativeAudioStreaming initialized");
    }
    
    return self;
@@ -62,30 +89,26 @@ RCT_EXPORT_MODULE()
 
 - (void)dealloc
 {
-   [self unregisterAudioInterruptionNotifications];
-   [self unregisterRemoteControlEvents];
-   [self.audioPlayer setDelegate:nil];
+   // [self unregisterAudioInterruptionNotifications];
+   // [self unregisterRemoteControlEvents];
+   // [self.audioPlayer setDelegate:nil];
 }
 
 
 #pragma mark - Pubic API
 
-RCT_EXPORT_METHOD(play:(NSString *) streamUrl)
+RCT_EXPORT_METHOD(play:(NSString *) streamUrl withKey:(nonnull NSNumber*)key)
 {
-   if (!self.audioPlayer) {
-      return;
-   }
 
    [self activate];
    
-   if (self.audioPlayer.state == STKAudioPlayerStatePaused && [self.lastUrlString isEqualToString:streamUrl]) {
-      [self.audioPlayer resume];
-   } else {
-      [self.audioPlayer play:streamUrl];
-   }
-
-   self.lastUrlString = streamUrl;
-   [self setNowPlayingInfo:true];
+    STKAudioPlayer* audioPlayer = [[STKAudioPlayer alloc] initWithOptions:(STKAudioPlayerOptions){ .flushQueueOnSeek = YES }];
+   [audioPlayer setDelegate:self];
+   
+   [audioPlayer play:streamUrl];
+   
+   [[self playerPool] setObject:audioPlayer forKey:key];
+   //[self setNowPlayingInfo:true];
 }
 
 RCT_EXPORT_METHOD(seekToTime:(double) seconds)
@@ -130,39 +153,41 @@ RCT_EXPORT_METHOD(goBack:(double) seconds)
    }
 }
 
-RCT_EXPORT_METHOD(pause)
+RCT_EXPORT_METHOD(pausewithKey:(nonnull NSNumber*)key)
 {
-   if (!self.audioPlayer) {
-      return;
-   } else {
-      [self.audioPlayer pause];
-      [self setNowPlayingInfo:false];
-      [self deactivate];
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      [player pause];
    }
 }
-
-RCT_EXPORT_METHOD(resume)
+RCT_EXPORT_METHOD(resumewithKey:(nonnull NSNumber*)key)
 {
-   if (!self.audioPlayer) {
-      return;
-   } else {
-      [self activate];
-      [self.audioPlayer resume];
-      [self setNowPlayingInfo:true];
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      [player resume];
    }
+
 }
 
-RCT_EXPORT_METHOD(stop)
+RCT_EXPORT_METHOD(stopwithKey:(nonnull NSNumber*)key)
 {
-   if (!self.audioPlayer) {
-      return;
-   } else {
-      [self.audioPlayer stop];
-      [self setNowPlayingInfo:false];
-      [self deactivate];
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      [player stop];
    }
+   
 }
+RCT_EXPORT_METHOD(destroywithKey:(nonnull NSNumber*)key)
+{
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      [player stop];
+      [[self callbackPool] removeObjectForKey:player];
 
+   }
+   [self deactivate];
+   
+}
 RCT_EXPORT_METHOD(getStatus: (RCTResponseSenderBlock) callback)
 {
    NSString *status = @"STOPPED";
@@ -408,7 +433,7 @@ RCT_EXPORT_METHOD(getStatus: (RCTResponseSenderBlock) callback)
 - (MPRemoteCommandHandlerStatus)didReceivePlayCommand:(MPRemoteCommand *)event
 {
    NSLog(@"didReceivePlayCommand");
-   [self resume];
+  // [self resume];
    return MPRemoteCommandHandlerStatusSuccess;
 }
 
