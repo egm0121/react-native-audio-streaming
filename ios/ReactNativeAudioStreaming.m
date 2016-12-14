@@ -102,14 +102,26 @@ RCT_EXPORT_METHOD(play:(NSString *) streamUrl withKey:(nonnull NSNumber*)key)
 
    [self activate];
    
-    STKAudioPlayer* audioPlayer = [[STKAudioPlayer alloc] initWithOptions:(STKAudioPlayerOptions){ .flushQueueOnSeek = YES }];
-   [audioPlayer setDelegate:self];
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      [player pause];
+   }
    
-   [audioPlayer play:streamUrl];
+   [player play:streamUrl];
    
-   [[self playerPool] setObject:audioPlayer forKey:key];
    //[self setNowPlayingInfo:true];
 }
+RCT_EXPORT_METHOD(createPlayer:(nonnull NSNumber*)key)
+{
+   
+   [self activate];
+   
+   STKAudioPlayer* audioPlayer = [[STKAudioPlayer alloc] initWithOptions:(STKAudioPlayerOptions){ .flushQueueOnSeek = YES }];
+   [audioPlayer setDelegate:self];
+   
+   [[self playerPool] setObject:audioPlayer forKey:key];
+}
+
 
 RCT_EXPORT_METHOD(seekToTime:(double) seconds)
 {
@@ -151,6 +163,14 @@ RCT_EXPORT_METHOD(goBack:(double) seconds)
    else {
       [self.audioPlayer seekToTime:newtime];
    }
+}
+RCT_EXPORT_METHOD(setPanWithKey:(nonnull NSNumber*)key andPan: (nonnull NSNumber*) pan)
+{
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      [player setPan:pan ];
+   }
+   
 }
 
 RCT_EXPORT_METHOD(pausewithKey:(nonnull NSNumber*)key)
