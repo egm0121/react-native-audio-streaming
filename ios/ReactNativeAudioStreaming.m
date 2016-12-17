@@ -116,7 +116,8 @@ RCT_EXPORT_METHOD(createPlayer:(nonnull NSNumber*)key)
 
    [self activate];
 
-   STKAudioPlayer* audioPlayer = [[STKAudioPlayer alloc] initWithOptions:(STKAudioPlayerOptions){ .flushQueueOnSeek = YES }];
+   STKAudioPlayer* audioPlayer = [[STKAudioPlayer alloc] initWithOptions:(STKAudioPlayerOptions){
+      .flushQueueOnSeek = YES }];
    [audioPlayer setDelegate:self];
 
    [[self playerPool] setObject:audioPlayer forKey:key];
@@ -177,7 +178,7 @@ RCT_EXPORT_METHOD(setVolumeWithKey:(nonnull NSNumber*)key andVolume: (nonnull NS
 {
    STKAudioPlayer* player = [self playerForKey:key];
    if (player) {
-      [player setVolume:volume ];
+      [player setVolume:[volume floatValue] ];
    }
 }
 
