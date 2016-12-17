@@ -63,6 +63,9 @@ class ReactNativeStreamingPlayer {
   getPosition(){
 
   }
+  getStatus(cb){
+    ReactNativeAudioStreaming.getStatusWithKey(this._nativeInstanceId,cb);
+  }
   destroy(){
 
   }

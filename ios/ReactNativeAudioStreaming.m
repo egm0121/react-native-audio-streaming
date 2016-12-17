@@ -220,26 +220,27 @@ RCT_EXPORT_METHOD(destroywithKey:(nonnull NSNumber*)key)
    [self deactivate];
 
 }
-RCT_EXPORT_METHOD(getStatus: (RCTResponseSenderBlock) callback)
+RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTResponseSenderBlock) callback)
 {
+   STKAudioPlayer* player = [self playerForKey:key];
    NSString *status = @"STOPPED";
-   NSNumber *duration = [NSNumber numberWithFloat:self.audioPlayer.duration];
-   NSNumber *progress = [NSNumber numberWithFloat:self.audioPlayer.progress];
+   NSNumber *duration = [NSNumber numberWithFloat:player.duration];
+   NSNumber *progress = [NSNumber numberWithFloat:player.progress];
 
-   if (!self.audioPlayer) {
+   if (!player) {
       status = @"ERROR";
    }
-   else if ([self.audioPlayer state] == STKAudioPlayerStatePlaying) {
+   else if ([player state] == STKAudioPlayerStatePlaying) {
       status = @"PLAYING";
    }
-   else if ([self.audioPlayer state] == STKAudioPlayerStatePaused) {
+   else if ([player state] == STKAudioPlayerStatePaused) {
       status = @"PAUSED";
    }
-   else if ([self.audioPlayer state] == STKAudioPlayerStateBuffering) {
+   else if ([player state] == STKAudioPlayerStateBuffering) {
       status = @"BUFFERING";
    }
 
-   callback(@[[NSNull null], @{@"status": status, @"progress": progress, @"duration": duration, @"url": self.lastUrlString}]);
+   callback(@[[NSNull null], @{@"status": status, @"progress": progress, @"duration": duration}]);
 }
 
 #pragma mark - StreamingKit Audio Player
