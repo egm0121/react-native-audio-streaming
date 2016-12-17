@@ -117,7 +117,9 @@ RCT_EXPORT_METHOD(createPlayer:(nonnull NSNumber*)key)
    [self activate];
 
    STKAudioPlayer* audioPlayer = [[STKAudioPlayer alloc] initWithOptions:(STKAudioPlayerOptions){
-      .flushQueueOnSeek = YES }];
+      .flushQueueOnSeek = YES,
+      .enableVolumeMixer = YES
+   }];
    [audioPlayer setDelegate:self];
 
    [[self playerPool] setObject:audioPlayer forKey:key];
