@@ -180,7 +180,8 @@ RCT_EXPORT_METHOD(setVolumeWithKey:(nonnull NSNumber*)key andVolume: (nonnull NS
 {
    STKAudioPlayer* player = [self playerForKey:key];
    if (player) {
-      [player setVolume:[volume floatValue] ];
+      
+      [player setVolume: [volume floatValue] ];
    }
 }
 

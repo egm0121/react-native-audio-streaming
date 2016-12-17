@@ -30,7 +30,7 @@ class ReactNativeStreamingPlayer {
     ReactNativeAudioStreaming.stopWithKey(this._nativeInstanceId);
   }
   setVolume(volInt){
-    ReactNativeAudioStreaming.setVolumeWithKey(volInt,this._nativeInstanceId);
+    ReactNativeAudioStreaming.setVolumeWithKey(this._nativeInstanceId,volInt);
   }
   setPan(panInt){
     panInt = parseInt(panInt);
