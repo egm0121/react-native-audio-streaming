@@ -21,16 +21,16 @@ class ReactNativeStreamingPlayer {
     ReactNativeAudioStreaming.play(this._currentSoundUrl,this._nativeInstanceId);
   }
   pause(){
-      ReactNativeAudioStreaming.pausewithKey(this._nativeInstanceId);
+    ReactNativeAudioStreaming.pauseWithKey(this._nativeInstanceId);
+  }
+  resume(){
+    ReactNativeAudioStreaming.resumeWithKey(this._nativeInstanceId);
   }
   stop(){
-    ReactNativeAudioStreaming.stopwithKey(this._nativeInstanceId);
+    ReactNativeAudioStreaming.stopWithKey(this._nativeInstanceId);
   }
   setVolume(volInt){
-
-  }
-  getVolume(){
-
+    ReactNativeAudioStreaming.setVolumeWithKey(volInt,this._nativeInstanceId);
   }
   setPan(panInt){
     panInt = parseInt(panInt);
@@ -39,7 +39,7 @@ class ReactNativeStreamingPlayer {
     }
     ReactNativeAudioStreaming.setPanWithKey(this._nativeInstanceId,panInt);
   }
-  getPan(){
+  setPosition(posFloat){
 
   }
   setSoundUrl(urlString){
@@ -51,10 +51,13 @@ class ReactNativeStreamingPlayer {
   getSoundUrl(){
     return this._currentSoundUrl;
   }
-  isPlaying (){
+  getPan(){
 
   }
-  setPosition(posFloat){
+  getVolume(){
+
+  }
+  isPlaying (){
 
   }
   getPosition(){
