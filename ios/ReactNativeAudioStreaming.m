@@ -50,14 +50,13 @@ RCT_EXPORT_MODULE()
    self = [super init];
    if (self) {
       [self setSharedAudioSessionCategory];
-      //self.audioPlayer = [[STKAudioPlayer alloc] initWithOptions:(STKAudioPlayerOptions){ .flushQueueOnSeek = YES }];
+      
       //[self.audioPlayer setDelegate:self];
+      //@TODO: resume all functionality with remote control + audio interruption notifications
       //[self registerAudioInterruptionNotifications];
       //[self registerRemoteControlEvents];
       //[self setNowPlayingInfo:true];
       self.lastUrlString = @"";
-
-      //[NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(tick:) userInfo:nil repeats:YES];
 
       NSLog(@"ReactNativeAudioStreaming initialized");
    }
@@ -89,6 +88,7 @@ RCT_EXPORT_MODULE()
 
 - (void)dealloc
 {
+   //@TODO: destroy all functionality with remote control + audio interruption notifications
    // [self unregisterAudioInterruptionNotifications];
    // [self unregisterRemoteControlEvents];
    // [self.audioPlayer setDelegate:nil];
@@ -97,7 +97,7 @@ RCT_EXPORT_MODULE()
 
 #pragma mark - Pubic API
 
-RCT_EXPORT_METHOD(play:(NSString *) streamUrl withKey:(nonnull NSNumber*)key)
+RCT_EXPORT_METHOD(playWithKey:(nonnull NSNumber*) key andStream:(NSString *) streamUrl )
 {
 
    [self activate];
@@ -126,52 +126,52 @@ RCT_EXPORT_METHOD(createPlayer:(nonnull NSNumber*)key)
 }
 
 
-RCT_EXPORT_METHOD(seekToTime:(double) seconds)
+RCT_EXPORT_METHOD(seekToTimeWithKey:(nonnull NSNumber*) key andSeconds:(nonnull NSNumber*) seconds)
 {
-   if (!self.audioPlayer) {
-      return;
-   }
-
-   [self.audioPlayer seekToTime:seconds];
-}
-
-RCT_EXPORT_METHOD(goForward:(double) seconds)
-{
-   if (!self.audioPlayer) {
-      return;
-   }
-
-   double newtime = self.audioPlayer.progress + seconds;
-
-   if (self.audioPlayer.duration < newtime) {
-      [self.audioPlayer stop];
-      [self setNowPlayingInfo:false];
-   }
-   else {
-      [self.audioPlayer seekToTime:newtime];
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      [player seekToTime:[seconds doubleValue]];
    }
 }
 
-RCT_EXPORT_METHOD(goBack:(double) seconds)
+RCT_EXPORT_METHOD(goForwardWithKey:(nonnull NSNumber*) key andSeconds:(nonnull NSNumber *) seconds)
 {
-   if (!self.audioPlayer) {
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (!player) {
       return;
    }
 
-   double newtime = self.audioPlayer.progress - seconds;
+   double newtime = player.progress + [seconds doubleValue];
 
-   if (newtime < 0) {
-      [self.audioPlayer seekToTime:0.0];
+   if (player.duration < newtime) {
+      [player stop];
    }
    else {
-      [self.audioPlayer seekToTime:newtime];
+      [player seekToTime:newtime];
+   }
+}
+
+RCT_EXPORT_METHOD(goBackWithKey:(nonnull NSNumber*) key andSeconds:(nonnull NSNumber *) seconds)
+{
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (!player) {
+      return;
+   }
+
+   double newtime = player.progress - [seconds doubleValue];;
+
+   if (player < 0) {
+      [player seekToTime:0.0];
+   }
+   else {
+      [player seekToTime:newtime];
    }
 }
 RCT_EXPORT_METHOD(setPanWithKey:(nonnull NSNumber*)key andPan: (nonnull NSNumber*) pan)
 {
    STKAudioPlayer* player = [self playerForKey:key];
    if (player) {
-      [player setPan:pan ];
+      [player setPan: [pan intValue] ];
    }
 
 }
@@ -200,7 +200,24 @@ RCT_EXPORT_METHOD(resumeWithKey:(nonnull NSNumber*)key)
    }
 
 }
-
+RCT_EXPORT_METHOD(getVolumeWithKey:(nonnull NSNumber*)key andCallback: (RCTResponseSenderBlock) callback)
+{
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      NSNumber *volume = [NSNumber numberWithFloat:player.volume];
+      callback(@[[NSNull null], @{ @"volume": volume}]);
+   }
+   
+}
+RCT_EXPORT_METHOD(getPanWithKey:(nonnull NSNumber*)key andCallback: (RCTResponseSenderBlock) callback)
+{
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      NSNumber *pan = [NSNumber numberWithInt:player.pan];
+      callback(@[[NSNull null], @{ @"pan": pan}]);
+   }
+   
+}
 RCT_EXPORT_METHOD(stopWithKey:(nonnull NSNumber*)key)
 {
    STKAudioPlayer* player = [self playerForKey:key];
@@ -209,7 +226,7 @@ RCT_EXPORT_METHOD(stopWithKey:(nonnull NSNumber*)key)
    }
 
 }
-RCT_EXPORT_METHOD(destroywithKey:(nonnull NSNumber*)key)
+RCT_EXPORT_METHOD(destroyWithKey:(nonnull NSNumber*)key)
 {
    STKAudioPlayer* player = [self playerForKey:key];
    if (player) {
@@ -253,7 +270,7 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
 
 - (void)audioPlayer:(STKAudioPlayer *)player didFinishPlayingQueueItemId:(NSObject *)queueItemId withReason:(STKAudioPlayerStopReason)stopReason andProgress:(double)progress andDuration:(double)duration
 {
-   NSLog(@"AudioPlayer has stopped");
+   NSLog(@"AudioPlayer has stopped - is end of track? reason :%ld  is EOF : %d",(long) stopReason, stopReason == STKAudioPlayerStopReasonEof);
 }
 
 - (void)audioPlayer:(STKAudioPlayer *)player didFinishBufferingSourceWithQueueItemId:(NSObject *)queueItemId
@@ -279,33 +296,45 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
 
 - (void)audioPlayer:(STKAudioPlayer *)player stateChanged:(STKAudioPlayerState)state previousState:(STKAudioPlayerState)previousState
 {
-   NSNumber *duration = [NSNumber numberWithFloat:self.audioPlayer.duration];
-   NSNumber *progress = [NSNumber numberWithFloat:self.audioPlayer.progress];
-
+   NSNumber *duration = [NSNumber numberWithFloat:player.duration];
+   NSNumber *progress = [NSNumber numberWithFloat:player.progress];
+   NSString *prevState = @"";
+   switch (previousState){
+      case STKAudioPlayerStatePlaying :
+         prevState = @"PLAYING";
+      case STKAudioPlayerStatePaused :
+         prevState = @"PAUSED";
+      case STKAudioPlayerStateStopped :
+         prevState = @"STOPPED";
+      case STKAudioPlayerStateBuffering:
+         prevState = @"BUFFERING";
+      case STKAudioPlayerStateError :
+         prevState = @"ERROR";
+   }
    switch (state) {
       case STKAudioPlayerStatePlaying:
          [self.bridge.eventDispatcher sendDeviceEventWithName:@"AudioBridgeEvent"
-                                                         body:@{@"status": @"PLAYING", @"progress": progress, @"duration": duration, @"url": self.lastUrlString}];
+                                                         body:@{@"status": @"PLAYING",@"prevStatus":prevState, @"progress": progress, @"duration": duration , @"playerId" : [self keyForPlayer:player]}];
          break;
 
       case STKAudioPlayerStatePaused:
          [self.bridge.eventDispatcher sendDeviceEventWithName:@"AudioBridgeEvent"
-                                                         body:@{@"status": @"PAUSED", @"progress": progress, @"duration": duration, @"url": self.lastUrlString}];
+                                                         body:@{@"status": @"PAUSED",@"prevStatus":prevState, @"progress": progress, @"duration": duration , @"playerId" : [self keyForPlayer:player]}];
          break;
 
       case STKAudioPlayerStateStopped:
          [self.bridge.eventDispatcher sendDeviceEventWithName:@"AudioBridgeEvent"
-                                                         body:@{@"status": @"STOPPED", @"progress": progress, @"duration": duration, @"url": self.lastUrlString}];
+                                                         body:@{@"status": @"STOPPED", @"prevStatus":prevState,@"progress": progress, @"duration": duration, @"playerId" : [self keyForPlayer:player]}];
          break;
 
       case STKAudioPlayerStateBuffering:
          [self.bridge.eventDispatcher sendDeviceEventWithName:@"AudioBridgeEvent"
-                                                         body:@{@"status": @"BUFFERING"}];
+                                                         body:@{@"status": @"BUFFERING",@"prevStatus":prevState, @"playerId" : [self keyForPlayer:player]}];
          break;
 
       case STKAudioPlayerStateError:
          [self.bridge.eventDispatcher sendDeviceEventWithName:@"AudioBridgeEvent"
-                                                         body:@{@"status": @"ERROR"}];
+                                                         body:@{@"status": @"ERROR",@"prevStatus":prevState, @"playerId" : [self keyForPlayer:player]}];
          break;
 
       default:
@@ -390,13 +419,13 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
    {
       case AVAudioSessionInterruptionTypeBegan:
          NSLog(@"Audio Session Interruption case started.");
-         [self.audioPlayer pause];
+        //  [self.audioPlayer pause];
          break;
 
       case AVAudioSessionInterruptionTypeEnded:
          NSLog(@"Audio Session Interruption case ended.");
          self.isPlayingWithOthers = [[AVAudioSession sharedInstance] isOtherAudioPlaying];
-         (self.isPlayingWithOthers) ? [self.audioPlayer stop] : [self.audioPlayer resume];
+         //(self.isPlayingWithOthers) ? [self.audioPlayer stop] : [self.audioPlayer resume];
          break;
 
       default:
@@ -424,7 +453,7 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
 
       case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
          // The previous audio output path is no longer available.
-         [self.audioPlayer stop];
+         //[self.audioPlayer stop];
          break;
 
       case AVAudioSessionRouteChangeReasonCategoryChange:
@@ -473,7 +502,7 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
 - (MPRemoteCommandHandlerStatus)didReceivePauseCommand:(MPRemoteCommand *)event
 {
    NSLog(@"didReceivePauseCommand");
-   [self pause];
+   //[self pause];
    return MPRemoteCommandHandlerStatusSuccess;
 }
 

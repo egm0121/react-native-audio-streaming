@@ -44,12 +44,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0EDFA4144B2AEA3EAF68F078 /* Frameworks */ = {
+		0EDFA4144B2AEA3EAF68F078 /* ffefwdfgdfgg  */ = {
 			isa = PBXGroup;
 			children = (
 				4B3DA42824085CFA56B54771 /* libPods-ReactNativeAudioStreaming.a */,
 			);
-			name = Frameworks;
+			name = "ffefwdfgdfgg ";
 			sourceTree = "<group>";
 		};
 		134814211AA4EA7D00B7C361 /* Products */ = {
@@ -76,7 +76,7 @@
 				B3E7B5891CC2AC0600A0062D /* ReactNativeAudioStreaming.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
 				2B5F933D7893421053AABADB /* Pods */,
-				0EDFA4144B2AEA3EAF68F078 /* Frameworks */,
+				0EDFA4144B2AEA3EAF68F078 /* ffefwdfgdfgg  */,
 			);
 			indentWidth = 3;
 			sourceTree = "<group>";

@@ -25,5 +25,8 @@
   },
   "devDependencies": {
     "react-native": "^0.30.0"
+  },
+  "dependencies": {
+    "react-native-slider": "^0.9.1"
   }
 }
