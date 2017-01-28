@@ -8,14 +8,29 @@ const { ReactNativeAudioStreaming } = NativeModules;
 let NATIVE_INSTANCE_COUNTER = 0;
 let instanceMap = {};
 //@TODO : extend an EventEmitter or mixin EE instance
+function broadcastToAllInstances(evtName,evtData){
+  Object.keys(instanceMap).map((playerId) => {
+    instanceMap[playerId].trigger(evtName,evtData);
+  });
+};
 function subscribeGlobalAudioEvents(){
+  DeviceEventEmitter.addListener('AudioRouteInterruptionEvent',broadcastToAllInstances.bind(null,'AudioRouteInterruptionEvent'));
+  DeviceEventEmitter.addListener('AudioSessionInterruptionEvent',broadcastToAllInstances.bind(null,'AudioSessionInterruptionEvent'));
+  DeviceEventEmitter.addListener('RemoteControlEvents',broadcastToAllInstances.bind(null,'RemoteControlEvents'));
   DeviceEventEmitter.addListener(
-     'AudioBridgeEvent', (evt) => {
-       if('playerId' in evt && instanceMap[evt.playerId] !== undefined){
-         instanceMap[evt.playerId].dispatchAudioEvent(evt);
+       'AudioBridgeEvent', (evt) => {
+         if('playerId' in evt && instanceMap[evt.playerId] !== undefined){
+           instanceMap[evt.playerId].dispatchAudioEvent(evt);
+         }
        }
-     }
- );
+  );
+  DeviceEventEmitter.addListener(
+    'AudioPlaybackStopEvent', (evt) => {
+      if('playerId' in evt && instanceMap[evt.playerId] !== undefined){
+        instanceMap[evt.playerId].dispatchAudioPlaybackStopEvent(evt);
+      }
+    }
+  );
 }
 class ReactNativeStreamingPlayer extends EventEmitter {
   constructor(soundUrl){
@@ -25,11 +40,11 @@ class ReactNativeStreamingPlayer extends EventEmitter {
       ReactNativeAudioStreaming.createPlayer(this._nativeInstanceId);
       instanceMap[this._nativeInstanceId] = this;
   }
-  _bindPlayerEvents(){
-
-  }
   dispatchAudioEvent(evt){
-    this.trigger('AudioBridgeEvent',evt);
+    this.trigger('stateChange',evt);
+  }
+  dispatchAudioPlaybackStopEvent(evt){
+    this.trigger('playbackStopped',evt);
   }
   play(){
     ReactNativeAudioStreaming.playWithKey(this._nativeInstanceId,this._currentSoundUrl);
