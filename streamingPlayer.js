@@ -7,16 +7,22 @@ import EventEmitter from 'es2015-event-emitter';
 const { ReactNativeAudioStreaming } = NativeModules;
 let NATIVE_INSTANCE_COUNTER = 0;
 let instanceMap = {};
-//@TODO : extend an EventEmitter or mixin EE instance
+
 function broadcastToAllInstances(evtName,evtData){
   Object.keys(instanceMap).map((playerId) => {
     instanceMap[playerId].trigger(evtName,evtData);
   });
 };
 function subscribeGlobalAudioEvents(){
-  DeviceEventEmitter.addListener('AudioRouteInterruptionEvent',broadcastToAllInstances.bind(null,'AudioRouteInterruptionEvent'));
-  DeviceEventEmitter.addListener('AudioSessionInterruptionEvent',broadcastToAllInstances.bind(null,'AudioSessionInterruptionEvent'));
-  DeviceEventEmitter.addListener('RemoteControlEvents',broadcastToAllInstances.bind(null,'RemoteControlEvents'));
+  DeviceEventEmitter.addListener('AudioRouteInterruptionEvent',
+    broadcastToAllInstances.bind(null,'AudioRouteInterruptionEvent')
+  );
+  DeviceEventEmitter.addListener('AudioSessionInterruptionEvent',
+    broadcastToAllInstances.bind(null,'AudioSessionInterruptionEvent')
+  );
+  DeviceEventEmitter.addListener('RemoteControlEvents',
+    broadcastToAllInstances.bind(null,'RemoteControlEvents')
+  );
   DeviceEventEmitter.addListener(
        'AudioBridgeEvent', (evt) => {
          if('playerId' in evt && instanceMap[evt.playerId] !== undefined){
@@ -32,6 +38,7 @@ function subscribeGlobalAudioEvents(){
     }
   );
 }
+
 class ReactNativeStreamingPlayer extends EventEmitter {
   constructor(soundUrl){
       super();

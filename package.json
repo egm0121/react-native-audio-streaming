@@ -1,7 +1,7 @@
 {
-  "name": "react-native-audio-streaming",
+  "name": "egm0121-react-native-audio-streaming",
   "version": "2.1.0",
-  "description": "React native audio streaming library for android and iOS",
+  "description": "React native streaming kit bridge for iOS with multiple player instances support",
   "repository": {
     "type": "git",
     "url": "git@github.com:tlenclos/react-native-audio-streaming.git"
@@ -10,11 +10,12 @@
     "react-native",
     "audio streaming",
     "ios",
-    "android",
-    "web radio",
-    "player"
+    "multiple",
+    "player",
+    "instance",
+    "streamingkit"
   ],
-  "author": "Thibault Lenclos",
+  "author": "egm0121",
   "license": "MIT",
   "main": "index.js",
   "scripts": {
@@ -25,8 +26,5 @@
   },
   "devDependencies": {
     "react-native": "^0.30.0"
-  },
-  "dependencies": {
-    "react-native-slider": "^0.9.1"
   }
 }
