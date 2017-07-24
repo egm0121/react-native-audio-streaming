@@ -54,7 +54,6 @@ RCT_EXPORT_MODULE()
       //@TODO: resume all functionality with remote control + audio interruption notifications
       [self registerAudioInterruptionNotifications];
       [self registerRemoteControlEvents];
-      //[self setNowPlayingInfo:true];
       self.lastUrlString = @"";
 
       NSLog(@"ReactNativeAudioStreaming initialized");
@@ -107,7 +106,6 @@ RCT_EXPORT_METHOD(playWithKey:(nonnull NSNumber*) key andStream:(NSString *) str
 
    [player play:streamUrl];
 
-   //[self setNowPlayingInfo:true];
 }
 RCT_EXPORT_METHOD(createPlayer:(nonnull NSNumber*)key)
 {
@@ -296,7 +294,6 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
                                                                                    @"key": @"StreamTitle",
                                                                                    @"value": dictionary[@"StreamTitle"]
                                                                                    }];
-   [self setNowPlayingInfo:true];
 }
 
 - (void)audioPlayer:(STKAudioPlayer *)player stateChanged:(STKAudioPlayerState)state previousState:(STKAudioPlayerState)previousState
@@ -580,17 +577,18 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
    [commandCenter.pauseCommand removeTarget:self];
 }
 
-- (void)setNowPlayingInfo:(bool)isPlaying
+RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info)
 {
-   // TODO Get artwork from stream
-   // MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc]initWithImage:[UIImage imageNamed:@"webradio1"]];
 
    NSString* appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
+   NSString *icon = [[[[NSBundle mainBundle] infoDictionary] valueForKeyPath:@"CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconFiles"] lastObject];
+   MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:icon]];
    NSDictionary *nowPlayingInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                                   self.currentSong, MPMediaItemPropertyAlbumTitle,
+                                   info, MPMediaItemPropertyAlbumTitle,
+                                   artwork, MPMediaItemPropertyArtwork,
                                    @"", MPMediaItemPropertyAlbumArtist,
                                    appName ? appName : @"", MPMediaItemPropertyTitle,
-                                   [NSNumber numberWithFloat:isPlaying ? 1.0f : 0.0], MPNowPlayingInfoPropertyPlaybackRate, nil];
+                                   [NSNumber numberWithFloat: 1.0f ], MPNowPlayingInfoPropertyPlaybackRate, nil];
    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
 }
 
