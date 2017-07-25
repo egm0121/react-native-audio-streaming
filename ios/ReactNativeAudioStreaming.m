@@ -581,8 +581,8 @@ RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info)
 {
 
    NSString* appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
-   NSString *icon = [[[[NSBundle mainBundle] infoDictionary] valueForKeyPath:@"CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconFiles"] lastObject];
-   MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:icon]];
+  
+   MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:@"IconHighRes"]];
    NSDictionary *nowPlayingInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                                    info, MPMediaItemPropertyAlbumTitle,
                                    artwork, MPMediaItemPropertyArtwork,
