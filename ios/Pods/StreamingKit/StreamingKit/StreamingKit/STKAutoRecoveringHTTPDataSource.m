@@ -1,11 +1,11 @@
 /**********************************************************************************
  AudioPlayer.m
- 
+
  Created by Thong Nguyen on 16/10/2012.
  https://github.com/tumtumtum/audjustable
- 
+
  Copyright (c) 2012-2014 Thong Nguyen (tumtumtum@gmail.com). All rights reserved.
- 
+
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
  1. Redistributions of source code must retain the above copyright
@@ -19,7 +19,7 @@
  4. Neither the name of Thong Nguyen nor the
  names of its contributors may be used to endorse or promote products
  derived from this software without specific prior written permission.
- 
+
  THIS SOFTWARE IS PROVIDED BY Thong Nguyen''AS IS'' AND ANY
  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -50,14 +50,14 @@ static uint64_t GetTickCount(void)
 {
     static mach_timebase_info_data_t sTimebaseInfo;
     uint64_t machTime = mach_absolute_time();
-    
+
     if (sTimebaseInfo.denom == 0 )
     {
         (void) mach_timebase_info(&sTimebaseInfo);
     }
-    
+
     uint64_t millis = ((machTime / 1000000) * sTimebaseInfo.numer) / sTimebaseInfo.denom;
-    
+
     return millis;
 }
 
@@ -81,7 +81,7 @@ static void ReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkReach
     @autoreleasepool
     {
         STKAutoRecoveringHTTPDataSource* dataSource = (__bridge STKAutoRecoveringHTTPDataSource*)info;
-        
+
         [dataSource reachabilityChanged];
     }
 }
@@ -92,7 +92,7 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
     {
         options->watchdogPeriodSeconds = DEFAULT_WATCHDOG_PERIOD_SECONDS;
     }
-    
+
     if (options->inactivePeriodBeforeReconnectSeconds == 0)
     {
         options->inactivePeriodBeforeReconnectSeconds = DEFAULT_INACTIVE_PERIOD_BEFORE_RECONNECT_SECONDS;
@@ -123,20 +123,20 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
     if (self = [super initWithDataSource:innerDataSourceIn])
     {
         self.innerDataSource.delegate = self;
-        
-        struct sockaddr_in zeroAddress;
-        
+      
+        struct sockaddr_in6 zeroAddress;
+
         bzero(&zeroAddress, sizeof(zeroAddress));
-        zeroAddress.sin_len = sizeof(zeroAddress);
-        zeroAddress.sin_family = AF_INET;
-        
+        zeroAddress.sin6_len = sizeof(zeroAddress);
+        zeroAddress.sin6_family = AF_INET6;
+
         PopulateOptionsWithDefault(&optionsIn);
-        
+
         self->options = optionsIn;
-        
+
         reachabilityRef = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, (const struct sockaddr*)&zeroAddress);
     }
-    
+
     return self;
 }
 
@@ -144,7 +144,7 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
 {
     BOOL retVal = NO;
     SCNetworkReachabilityContext context = { 0, (__bridge void*)self, NULL, NULL, NULL };
-    
+
     if (SCNetworkReachabilitySetCallback(reachabilityRef, ReachabilityCallback, &context))
     {
 		if(SCNetworkReachabilityScheduleWithRunLoop(reachabilityRef, runLoop.getCFRunLoop, kCFRunLoopDefaultMode))
@@ -152,7 +152,7 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
             retVal = YES;
         }
     }
-    
+
     return retVal;
 }
 
@@ -160,17 +160,17 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
 {
     [super registerForEvents:runLoop];
     [self startNotifierOnRunLoop:runLoop];
-    
+
     if (timeoutTimer)
     {
         [timeoutTimer invalidate];
         timeoutTimer = nil;
     }
-    
+
 	ticksWhenLastDataReceived = GetTickCount();
-	
+
     [self createTimeoutTimer];
-    
+
     return YES;
 }
 
@@ -178,7 +178,7 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
 {
     [super unregisterForEvents];
     [self stopNotifier];
-    
+
     [self destroyTimeoutTimer];
 }
 
@@ -189,13 +189,13 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
         if ([self hasGotNetworkConnection])
         {
             uint64_t currentTicks = GetTickCount();
-            
+
             if (((currentTicks - ticksWhenLastDataReceived) / 1000) >= options.inactivePeriodBeforeReconnectSeconds)
             {
                 serial++;
-                
+
                 NSLog(@"timeoutTimerTick %lld/%lld", self.position, self.length);
-                
+
                 [self attemptReconnectWithSerial:@(serial)];
             }
         }
@@ -205,16 +205,16 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
 -(void) createTimeoutTimer
 {
     [self destroyTimeoutTimer];
-    
+
     NSRunLoop* runLoop = self.innerDataSource.eventsRunLoop;
-    
+
     if (runLoop == nil)
     {
         return;
     }
-    
+
     timeoutTimer = [NSTimer timerWithTimeInterval:options.watchdogPeriodSeconds target:self selector:@selector(timeoutTimerTick:) userInfo:@(serial) repeats:YES];
-    
+
     [runLoop addTimer:timeoutTimer forMode:NSRunLoopCommonModes];
 }
 
@@ -239,19 +239,19 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
 -(BOOL) hasGotNetworkConnection
 {
     SCNetworkReachabilityFlags flags;
-    
+
     if (SCNetworkReachabilityGetFlags(reachabilityRef, &flags))
     {
         return ((flags & kSCNetworkReachabilityFlagsReachable) != 0);
     }
-    
+
     return NO;
 }
 
 -(void) seekToOffset:(int64_t)offset
 {
 	ticksWhenLastDataReceived = GetTickCount();
-	
+
 	[super seekToOffset:offset];
 }
 
@@ -264,14 +264,14 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
 -(void) dealloc
 {
     NSLog(@"STKAutoRecoveringHTTPDataSource dealloc");
-    
+
     self.innerDataSource.delegate = nil;
-    
+
     [self stopNotifier];
     [self destroyTimeoutTimer];
-    
+
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
-    
+
     if (reachabilityRef!= NULL)
     {
         CFRelease(reachabilityRef);
@@ -283,11 +283,11 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
     if (waitingForNetwork)
     {
         waitingForNetwork = NO;
-        
+
         NSLog(@"reachabilityChanged %lld/%lld", self.position, self.length);
-        
+
         serial++;
-        
+
         [self attemptReconnectWithSerial:@(serial)];
     }
 }
@@ -298,11 +298,11 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
     {
         return;
     }
-    
+
     serial++;
     waitSeconds = 1;
     ticksWhenLastDataReceived = GetTickCount();
-    
+
     [super dataSourceDataAvailable:dataSource];
 }
 
@@ -312,9 +312,9 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
     {
         return;
     }
-    
+
     NSLog(@"attemptReconnect %lld/%lld", self.position, self.length);
-    
+
 	if (self.innerDataSource.eventsRunLoop)
 	{
 		[self.innerDataSource reconnect];
@@ -331,50 +331,50 @@ static void PopulateOptionsWithDefault(STKAutoRecoveringHTTPDataSourceOptions* o
     if (![self hasGotNetworkConnection])
     {
         waitingForNetwork = YES;
-        
+
         return;
     }
-    
+
 	waitingForNetwork = NO;
-	
+
     NSRunLoop* runLoop = self.innerDataSource.eventsRunLoop;
-    
+
     if (runLoop == nil)
     {
         // DataSource no longer used
-        
+
         return;
     }
     else
     {
         serial++;
-        
+
         NSTimer* timer = [NSTimer timerWithTimeInterval:waitSeconds target:self selector:@selector(attemptReconnectWithTimer:) userInfo:@(serial) repeats:NO];
-        
+
         [runLoop addTimer:timer forMode:NSRunLoopCommonModes];
     }
-    
+
     waitSeconds = MIN(waitSeconds + 1, 5);
 }
 
 -(void) dataSourceEof:(STKDataSource*)dataSource
 {
 	NSLog(@"dataSourceEof");
-	
+
     if ([self position] < [self length])
     {
         [self processRetryOnError];
-        
+
         return;
     }
-    
+
     [self.delegate dataSourceEof:self];
 }
 
 -(void) dataSourceErrorOccured:(STKDataSource*)dataSource
 {
     NSLog(@"dataSourceErrorOccured");
-    
+
     if (self.innerDataSource.httpStatusCode == 416 /* Range out of bounds */)
     {
         [super dataSourceEof:dataSource];

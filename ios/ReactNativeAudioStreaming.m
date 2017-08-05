@@ -50,11 +50,10 @@ RCT_EXPORT_MODULE()
    self = [super init];
    if (self) {
       [self setSharedAudioSessionCategory];
-      
+
       //@TODO: resume all functionality with remote control + audio interruption notifications
       [self registerAudioInterruptionNotifications];
       [self registerRemoteControlEvents];
-      //[self setNowPlayingInfo:true];
       self.lastUrlString = @"";
 
       NSLog(@"ReactNativeAudioStreaming initialized");
@@ -87,7 +86,7 @@ RCT_EXPORT_MODULE()
 
 - (void)dealloc
 {
-   
+
    [self unregisterAudioInterruptionNotifications];
    [self unregisterRemoteControlEvents];
 }
@@ -107,7 +106,6 @@ RCT_EXPORT_METHOD(playWithKey:(nonnull NSNumber*) key andStream:(NSString *) str
 
    [player play:streamUrl];
 
-   //[self setNowPlayingInfo:true];
 }
 RCT_EXPORT_METHOD(createPlayer:(nonnull NSNumber*)key)
 {
@@ -178,7 +176,7 @@ RCT_EXPORT_METHOD(setVolumeWithKey:(nonnull NSNumber*)key andVolume: (nonnull NS
 {
    STKAudioPlayer* player = [self playerForKey:key];
    if (player) {
-      
+
       [player setVolume: [volume floatValue] ];
    }
 }
@@ -205,7 +203,7 @@ RCT_EXPORT_METHOD(getVolumeWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
       NSNumber *volume = [NSNumber numberWithFloat:player.volume];
       callback(@[[NSNull null], @{ @"volume": volume}]);
    }
-   
+
 }
 RCT_EXPORT_METHOD(getPanWithKey:(nonnull NSNumber*)key andCallback: (RCTResponseSenderBlock) callback)
 {
@@ -214,7 +212,7 @@ RCT_EXPORT_METHOD(getPanWithKey:(nonnull NSNumber*)key andCallback: (RCTResponse
       NSNumber *pan = [NSNumber numberWithInt:player.pan];
       callback(@[[NSNull null], @{ @"pan": pan}]);
    }
-   
+
 }
 RCT_EXPORT_METHOD(stopWithKey:(nonnull NSNumber*)key)
 {
@@ -269,7 +267,7 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
 - (void)audioPlayer:(STKAudioPlayer *)player didFinishPlayingQueueItemId:(NSObject *)queueItemId withReason:(STKAudioPlayerStopReason)stopReason andProgress:(double)progress andDuration:(double)duration
 {
    NSLog(@"AudioPlayer has stopped - is end of track? reason :%ld  is EOF : %d",(long) stopReason, stopReason == STKAudioPlayerStopReasonEof);
-   
+
    [self.bridge.eventDispatcher sendDeviceEventWithName:@"AudioPlaybackStopEvent"
                                                    body:@{@"progress":[NSNumber numberWithFloat:player.progress],
                                                           @"duration":[NSNumber numberWithFloat:player.duration],
@@ -280,7 +278,7 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
 - (void)audioPlayer:(STKAudioPlayer *)player didFinishBufferingSourceWithQueueItemId:(NSObject *)queueItemId
 {
    NSLog(@"AudioPlayer finished buffering");
-   
+
 }
 
 - (void)audioPlayer:(STKAudioPlayer *)player unexpectedError:(STKAudioPlayerErrorCode)errorCode {
@@ -296,7 +294,6 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
                                                                                    @"key": @"StreamTitle",
                                                                                    @"value": dictionary[@"StreamTitle"]
                                                                                    }];
-   [self setNowPlayingInfo:true];
 }
 
 - (void)audioPlayer:(STKAudioPlayer *)player stateChanged:(STKAudioPlayerState)state previousState:(STKAudioPlayerState)previousState
@@ -442,7 +439,7 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
                                                          body:@{@"reason": @"AVAudioSessionInterruptionTypeEnded",
                                                                 @"isPlayingWithOthers":[NSNumber numberWithBool: self.isPlayingWithOthers],
                                                                 @"interruptionType":[NSNumber numberWithLong:interuptionType]}];
-         
+
          break;
 
       default:
@@ -536,8 +533,8 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
    commandCenter.playCommand.enabled = YES;
    commandCenter.pauseCommand.enabled = YES;
    commandCenter.stopCommand.enabled = NO;
-   commandCenter.nextTrackCommand.enabled = NO;
-   commandCenter.previousTrackCommand.enabled = NO;
+   commandCenter.nextTrackCommand.enabled = YES;
+   commandCenter.previousTrackCommand.enabled = YES;
 }
 
 - (MPRemoteCommandHandlerStatus)didReceivePlayCommand:(MPRemoteCommand *)event
@@ -580,17 +577,23 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
    [commandCenter.pauseCommand removeTarget:self];
 }
 
-- (void)setNowPlayingInfo:(bool)isPlaying
+RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info andIcon: (NSString *)iconName)
 {
-   // TODO Get artwork from stream
-   // MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc]initWithImage:[UIImage imageNamed:@"webradio1"]];
 
    NSString* appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
+  //IconHighRes
+   
+   NSDictionary *infoPlist = [[NSBundle mainBundle] infoDictionary];
+   NSString *icon = [[infoPlist valueForKeyPath:@"CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconFiles"] lastObject];
+  
+   MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:iconName ? iconName : icon]];
    NSDictionary *nowPlayingInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                                   self.currentSong, MPMediaItemPropertyAlbumTitle,
+                                   info, MPMediaItemPropertyAlbumTitle,
+                                   artwork, MPMediaItemPropertyArtwork,
                                    @"", MPMediaItemPropertyAlbumArtist,
                                    appName ? appName : @"", MPMediaItemPropertyTitle,
-                                   [NSNumber numberWithFloat:isPlaying ? 1.0f : 0.0], MPNowPlayingInfoPropertyPlaybackRate, nil];
+                                   [NSNumber numberWithFloat: 1.0f ], MPNowPlayingInfoPropertyPlaybackRate, nil];
+
    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
 }
 
