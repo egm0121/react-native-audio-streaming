@@ -582,16 +582,16 @@ RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info andIcon: (NSString *)iconN
 
    NSString* appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
   //IconHighRes
-   
+
    NSDictionary *infoPlist = [[NSBundle mainBundle] infoDictionary];
    NSString *icon = [[infoPlist valueForKeyPath:@"CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconFiles"] lastObject];
-  
+
    MPMediaItemArtwork *artwork = [[MPMediaItemArtwork alloc] initWithImage:[UIImage imageNamed:iconName ? iconName : icon]];
    NSDictionary *nowPlayingInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                                   info, MPMediaItemPropertyAlbumTitle,
+                                   appName ? appName : @"", MPMediaItemPropertyAlbumTitle,
                                    artwork, MPMediaItemPropertyArtwork,
                                    @"", MPMediaItemPropertyAlbumArtist,
-                                   appName ? appName : @"", MPMediaItemPropertyTitle,
+                                   info, MPMediaItemPropertyTitle,
                                    [NSNumber numberWithFloat: 1.0f ], MPNowPlayingInfoPropertyPlaybackRate, nil];
 
    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
