@@ -54,7 +54,11 @@ class ReactNativeStreamingPlayer extends EventEmitter {
     this.trigger('playbackStopped',evt);
   }
   play(){
-    ReactNativeAudioStreaming.playWithKey(this._nativeInstanceId,this._currentSoundUrl);
+    if( this._currentSoundUrl.indexOf('://') > -1 ){
+        ReactNativeAudioStreaming.playWithKey(this._nativeInstanceId,this._currentSoundUrl);
+    } else {
+        ReactNativeAudioStreaming.playLocalWithKey(this._nativeInstanceId,this._currentSoundUrl);
+    }
   }
   pause(){
     ReactNativeAudioStreaming.pauseWithKey(this._nativeInstanceId);

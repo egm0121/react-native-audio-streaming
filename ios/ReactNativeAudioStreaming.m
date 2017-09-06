@@ -107,6 +107,24 @@ RCT_EXPORT_METHOD(playWithKey:(nonnull NSNumber*) key andStream:(NSString *) str
    [player play:streamUrl];
 
 }
+RCT_EXPORT_METHOD(playLocalWithKey:(nonnull NSNumber*) key andPath:(NSString *) filePath)
+{
+  
+   NSString *streamFile = [NSString stringWithFormat:@"file://%@", [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:filePath] ];
+   NSLog(@"stream path %@",streamFile);
+   [self activate];
+   
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      [player pause];
+   }
+   
+
+   [player play:streamFile];
+
+   
+}
+
 RCT_EXPORT_METHOD(createPlayer:(nonnull NSNumber*)key)
 {
 
