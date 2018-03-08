@@ -1,5 +1,5 @@
 {
-  "name": "egm0121-react-native-audio-streaming",
+  "name": "react-native-audio-streaming",
   "version": "2.1.0",
   "description": "React native streaming kit bridge for iOS with multiple player instances support",
   "repository": {
