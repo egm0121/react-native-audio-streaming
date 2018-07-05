@@ -1,3 +1,3 @@
 target 'ReactNativeAudioStreaming' do
-  pod 'StreamingKit', :git => 'https://github.com/tlenclos/StreamingKit.git', :branch => 'icecast'
+  pod 'StreamingKit', :git => 'https://github.com/egm0121/StreamingKit.git', :branch => 'feature/panner-support'
 end
