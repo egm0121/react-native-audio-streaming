@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 const { ReactNativeAudioStreaming } = NativeModules;
-
+import ReactNativeStreamingPlayer from './streamingPlayer';
 // Possibles states
 const PLAYING = 'PLAYING';
 const STREAMING = 'STREAMING';
@@ -153,4 +153,4 @@ Player.propTypes = {
     url: PropTypes.string.isRequired
 };
 
-export { Player, ReactNativeAudioStreaming }
+export { Player, ReactNativeAudioStreaming, ReactNativeStreamingPlayer }
