@@ -128,9 +128,10 @@ class ReactNativeStreamingPlayer extends EventEmitter {
     ReactNativeAudioStreaming.destroyWithKey(this._nativeInstanceId);
     instanceMap[this._nativeInstanceId] = undefined;
   }
-  setNowPlayingInfo(trackName,imageName){
-    ReactNativeAudioStreaming.setNowPlayingInfo(trackName,imageName);
+  setNowPlayingInfo(trackName,imageName,isPlaying = true){
+    ReactNativeAudioStreaming.setNowPlayingInfo(trackName,imageName,isPlaying ? 1 : 0);
   }
+
 }
 subscribeGlobalAudioEvents();
 export default ReactNativeStreamingPlayer;

@@ -595,7 +595,8 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
    [commandCenter.pauseCommand removeTarget:self];
 }
 
-RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info andIcon: (NSString *)iconName)
+
+RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info andIcon: (NSString *)iconName andIsPlaying: (nonnull NSNumber *) playbackRate)
 {
 
    NSString* appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
@@ -610,7 +611,7 @@ RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info andIcon: (NSString *)iconN
                                    artwork, MPMediaItemPropertyArtwork,
                                    @"", MPMediaItemPropertyAlbumArtist,
                                    info, MPMediaItemPropertyTitle,
-                                   [NSNumber numberWithFloat: 1.0f ], MPNowPlayingInfoPropertyPlaybackRate, nil];
+                                   playbackRate, MPNowPlayingInfoPropertyPlaybackRate, nil];
 
    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
 }
