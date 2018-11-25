@@ -596,7 +596,7 @@ RCT_EXPORT_METHOD(getStatusWithKey:(nonnull NSNumber*)key andCallback: (RCTRespo
 }
 
 
-RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info andIcon: (NSString *)iconName andIsPlaying: (nonnull NSNumber *) playbackRate)
+RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info andIcon: (NSString *)iconName andIsPlaying: (nonnull NSNumber *) playbackRate andTimeElapsed: (nonnull NSNumber *) timeElapsed andTimeTotal: (nonnull NSNumber *) timeTotal)
 {
 
    NSString* appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
@@ -611,7 +611,10 @@ RCT_EXPORT_METHOD(setNowPlayingInfo:(NSString *) info andIcon: (NSString *)iconN
                                    artwork, MPMediaItemPropertyArtwork,
                                    @"", MPMediaItemPropertyAlbumArtist,
                                    info, MPMediaItemPropertyTitle,
-                                   playbackRate, MPNowPlayingInfoPropertyPlaybackRate, nil];
+                                   playbackRate, MPNowPlayingInfoPropertyPlaybackRate,
+                                   timeElapsed, MPNowPlayingInfoPropertyElapsedPlaybackTime,
+                                   timeTotal, MPMediaItemPropertyPlaybackDuration,
+                                   nil];
 
    [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
 }
