@@ -38,7 +38,7 @@ function subscribeGlobalAudioEvents(){
     }
   );
 }
-
+console.log('THIS IS EGM0121 PACKAGE DEBUG 2');
 class ReactNativeStreamingPlayer extends EventEmitter {
   constructor(soundUrl){
       super();
