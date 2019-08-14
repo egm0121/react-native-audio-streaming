@@ -73,7 +73,12 @@ class ReactNativeStreamingPlayer extends EventEmitter {
       ReactNativeAudioStreaming.setVolumeWithKey(this._nativeInstanceId,volInt);
     }
     setPan(panInt){
-      
+      panInt = parseInt(panInt);
+      if(panInt < -1 || panInt > 1){
+        throw new Error("Out of range pan value provided");
+      }
+      console.log(`set pan to ${panInt} for player ${this._nativeInstanceId}`);
+      ReactNativeAudioStreaming.setPanWithKey(this._nativeInstanceId,panInt);
     }
     seekToTime(secondsDouble){
       ReactNativeAudioStreaming.seekToTimeWithKey(this._nativeInstanceId,secondsDouble);

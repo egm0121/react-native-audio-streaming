@@ -191,7 +191,14 @@ RCT_EXPORT_METHOD(setVolumeWithKey:(nonnull NSNumber*)key andVolume: (nonnull NS
       [player setVolume: [volume floatValue] ];
    }
 }
+RCT_EXPORT_METHOD(setPanWithKey:(nonnull NSNumber*)key andPan: (nonnull NSNumber*) pan)
+{
+   STKAudioPlayer* player = [self playerForKey:key];
+   if (player) {
+      [player setPan: [pan intValue] ];
+   }
 
+}
 RCT_EXPORT_METHOD(pauseWithKey:(nonnull NSNumber*)key)
 {
    STKAudioPlayer* player = [self playerForKey:key];

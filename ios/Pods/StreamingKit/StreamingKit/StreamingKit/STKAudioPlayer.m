@@ -215,6 +215,7 @@ static AudioStreamBasicDescription recordAudioStreamBasicDescription;
     STKAudioPlayerInternalState internalState;
 	
 	Float32 volume;
+    SInt16  pan;
 	Float32 peakPowerDb[2];
 	Float32 averagePowerDb[2];
 	
@@ -516,6 +517,7 @@ static void AudioFileStreamPacketsProc(void* clientData, UInt32 numberBytes, UIn
         options = optionsIn;
 		
 		self->volume = 1.0;
+        self->pan = 0;
         self->equalizerEnabled = optionsIn.equalizerBandFrequencies[0] != 0;
 
         PopulateOptionsWithDefault(&options);
@@ -2324,6 +2326,7 @@ static BOOL GetHardwareCodecClassDesc(UInt32 formatId, AudioClassDescription* cl
 	CHECK_STATUS_AND_RETURN(AUGraphInitialize(audioGraph));
 	
 	self.volume = self->volume;
+    self.pan = self->pan;
 }
 
 -(void) connectGraph
@@ -3431,10 +3434,26 @@ static OSStatus OutputRenderCallback(void* inRefCon, AudioUnitRenderActionFlags*
 	}
 #endif
 }
+#pragma mark Pan
+-(void) setPan:(SInt16)val;
+{
+    self->pan = val;
+
+ #if (TARGET_OS_IPHONE)
+    if (self->mixerNode)
+    {
+        AudioUnitSetParameter(self->mixerUnit, kMultiChannelMixerParam_Pan, kAudioUnitScope_Output, 0, val , 0);
+    }
+#endif
+}
 
 -(Float32) volume
 {
 	return self->volume;
+}
+-(SInt16) pan
+{
+    return self->pan;
 }
 
 -(BOOL) equalizerEnabled
