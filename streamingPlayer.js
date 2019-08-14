@@ -73,6 +73,7 @@ class ReactNativeStreamingPlayer extends EventEmitter {
       ReactNativeAudioStreaming.setVolumeWithKey(this._nativeInstanceId,volInt);
     }
     setPan(panInt){
+      
     }
     seekToTime(secondsDouble){
       ReactNativeAudioStreaming.seekToTimeWithKey(this._nativeInstanceId,secondsDouble);
